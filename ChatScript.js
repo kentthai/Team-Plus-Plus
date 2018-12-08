@@ -289,7 +289,6 @@ async function updateMessageDatabase(msg){
 				mostRecent: msg
 			});		
 		}
-	}
 
 	// Append the new message to chat window
 	chatRef.child("msgArray").limitToLast(1).once("child_added", snapshot => {
@@ -320,6 +319,8 @@ async function updateMessageDatabase(msg){
 			createHTMLMessage(inputMsg, source, timestamp, nameOfSender);
 		}
 	});
+
+	}
 }
 
 // Generates HTML element on sidebar for a specific contact
@@ -399,6 +400,10 @@ function createHTMLMessage(msg, source, time, name){
 	li.appendChild(img);
 	li.appendChild(p);
 
+	// Put html element on page
+	messages.append(li);
+	messages.append(div);
+
 	// Selects the messages class to always scroll to bottom
 	const messagesCont = document.querySelector('.messages');
 	shouldScroll = messagesCont.scrollTop + messagesCont.clientHeight === messagesCont.scrollHeight;
@@ -406,10 +411,6 @@ function createHTMLMessage(msg, source, time, name){
 		messagesCont.scrollTop = messagesCont.scrollHeight;
 	}
 
-	// Put html element on page
-	messages.append(li);
-	messages.append(div);
-	
 }
 
 // Adds message to message window whenever user presses enter
