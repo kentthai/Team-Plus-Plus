@@ -3,6 +3,8 @@ var storage = firebase.storage().ref();
 var root = firebase.database().ref("Users");
 var userId;
 var currentUser;
+var adminId = null;
+var currentTeam = null;
 
 window.onload = function () {
   firebase.auth().onAuthStateChanged(function (user) {
@@ -10,6 +12,8 @@ window.onload = function () {
     if (user) {
       userId = user.uid;
       currentUser = user;
+
+      changeView();
 
       // Check values
       console.log("userId has been set: " + userId);
@@ -75,6 +79,22 @@ function nameSave() {
       .child(userId)
       .child("Name")
       .set(otherName.toString());
+    var adminRef = firebase.database().ref("Users/" + userId + "/Teams/adminOf");
+    var memRef = firebase.database().ref("Users/" + userId + "/Teams/memberOf");
+
+    adminRef.once('child_added').then(function (snapshot) {
+      var team = snapshot.key;
+      console.log(team);
+      firebase.database().ref("Team/" + team + "/Members/" + userId + "/0").set(otherName);
+      console.log(firebase.database().ref("Team/" + team + "/Members/" + userId + "/0"));
+    });
+
+    memRef.once('child_added').then(function (snapshot) {
+      var team = snapshot.key;
+      console.log(team);
+      firebase.database().ref("Team/" + team + "/Members/" + userId + "/0").set(otherName);
+      console.log(firebase.database().ref("Team/" + team + "/Members/" + userId + "/0"));
+    });
   }
 }
 
@@ -302,4 +322,35 @@ function signOut() {
       firebase.auth().signOut();
     }
   });
+}
+
+async function getCurrTeam(ref) {
+  return ref.once('value').then(function (snapshot) {
+    currentTeam = snapshot.val();
+    console.log(currentTeam);
+  });
+}
+
+async function getAdminID(ref) {
+  return ref.once('value').then(function (snapshot) {
+    adminId = snapshot.val();
+    console.log(adminId);
+  })
+}
+
+async function changeView() {
+  var item = document.getElementById("move");
+  var ref = firebase.database().ref("Users/" + userId + "/currTeam");
+  await getCurrTeam(ref);
+  var aRef = firebase.database().ref("Team/" + currentTeam + "/admin");
+  await getAdminID(aRef);
+  if (adminId == userId) {
+    console.log("Should not be printed");
+    item.href = "HomePage.html";
+  }
+  else {
+    item.href = "HomePageMem.html";
+    console.log("Should be printed");
+  }
+
 }

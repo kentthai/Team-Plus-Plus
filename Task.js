@@ -23,11 +23,14 @@ var editDialog = document.getElementById("editDialog");
 var selectTags = document.getElementsByClassName("members");
 var taskRef = null;
 var memRef = null;
+var adminId = null;
+var currentTeam = null;
+var userId = null;
 
-firebase.auth().onAuthStateChanged(async function (user) {
+firebase.auth().onAuthStateChanged(async function(user) {
   // User is signed in: set userId and teamId
   if (user) {
-    var userId = user.uid;
+    userId = user.uid;
     console.log("Hello " + user.uid);
     var ref = firebase.database().ref("Users/" + userId);
     await loadTeamId(ref);
@@ -37,16 +40,17 @@ firebase.auth().onAuthStateChanged(async function (user) {
     console.log("teamId has been set: " + teamId);
   }
   // No user is signed in.
-  else {}
+  else {
+  }
 });
 
 async function loadTeamId(ref) {
-  return ref.once("value").then(function (snapshot) {
+  return ref.once("value").then(function(snapshot) {
     //console.log(snapshot.val())
     teamId = snapshot.val().currTeam;
   });
 }
-setTimeout(function () {
+setTimeout(function() {
   if (taskRef == null) {
     taskRef = firebase.database().ref("Team/" + teamId + "/Tasks");
   }
@@ -54,6 +58,7 @@ setTimeout(function () {
     memRef = firebase.database().ref("Team/" + teamId + "/Members");
   }
 
+  changeView();
   //Load in Team Members
   memRef.once("value", snapshot => {
     //console.log(snapshot.val());
@@ -86,7 +91,7 @@ setTimeout(function () {
       //left arrow
       node.childNodes[0].childNodes[1].childNodes[0].addEventListener(
         "click",
-        function () {
+        function() {
           let li = this.parentNode.parentNode;
           let status = li.className;
           if (status === "ip") {
@@ -109,7 +114,7 @@ setTimeout(function () {
       //right arrow
       node.childNodes[0].childNodes[1].childNodes[1].addEventListener(
         "click",
-        function () {
+        function() {
           let li = this.parentNode.parentNode;
           let status = li.className;
           if (status === "todo") {
@@ -139,7 +144,7 @@ setTimeout(function () {
         fin.appendChild(node);
       }
       //Show Edit Dialog
-      node.childNodes[0].childNodes[0].addEventListener("click", function () {
+      node.childNodes[0].childNodes[0].addEventListener("click", function() {
         currentTask = this;
         document.getElementById(
           "title1"
@@ -155,7 +160,7 @@ setTimeout(function () {
 
   //Show Add Dialog
   for (var i = 0; i < addButtons.length; i++) {
-    addButtons[i].addEventListener("click", function () {
+    addButtons[i].addEventListener("click", function() {
       list = this.parentNode.parentNode.id;
       dialog.showModal();
     });
@@ -163,7 +168,7 @@ setTimeout(function () {
 
   //Show Edit Dialog
   for (var i = 0; i < todo.childNodes.length; i++) {
-    todo.childNodes[i].addEventListener("click", function () {
+    todo.childNodes[i].addEventListener("click", function() {
       currentTask = this;
       console.log(this.title);
       document.getElementById("title1").value = this.title;
@@ -171,14 +176,14 @@ setTimeout(function () {
     });
   }
   for (var i = 0; i < ip.childNodes.length; i++) {
-    ip.childNodes[i].addEventListener("click", function () {
+    ip.childNodes[i].addEventListener("click", function() {
       currentTask = this;
       console.log(this.title);
       dialog.showModal();
     });
   }
   for (var i = 0; i < fin.childNodes.length; i++) {
-    fin.childNodes[i].addEventListener("click", function () {
+    fin.childNodes[i].addEventListener("click", function() {
       currentTask = this;
       console.log(this.title);
       dialog.showModal();
@@ -186,7 +191,7 @@ setTimeout(function () {
   }
 
   //Save Change Dialog
-  saveButton.addEventListener("click", function () {
+  saveButton.addEventListener("click", function() {
     let node = document.createElement("div");
     let title = document.getElementById("title0").value;
     document.getElementById("title0").value = "";
@@ -200,13 +205,13 @@ setTimeout(function () {
         handler: handler
       });
     });
-    setTimeout(function () {
+    setTimeout(function() {
       node.innerHTML = `<div class="${list}"><li id="${
         oneRef.key
       }"><div class="title">Title: ${title}</div><div class="handler">Handler: ${handler}</div></li><div class="arrows"><div class="left">⇦</div><div class="right">⇨</div></div></div>`;
       node.childNodes[0].childNodes[1].childNodes[0].addEventListener(
         "click",
-        function () {
+        function() {
           let li = this.parentNode.parentNode;
           var status = li.className;
           if (status === "ip") {
@@ -221,7 +226,7 @@ setTimeout(function () {
       );
       node.childNodes[0].childNodes[1].childNodes[1].addEventListener(
         "click",
-        function () {
+        function() {
           let li = this.parentNode.parentNode;
           let status = li.className;
           if (status === "todo") {
@@ -245,7 +250,7 @@ setTimeout(function () {
       }
 
       //Show Edit Dialog
-      node.childNodes[0].childNodes[0].addEventListener("click", function () {
+      node.childNodes[0].childNodes[0].addEventListener("click", function() {
         currentTask = this;
         document.getElementById(
           "title1"
@@ -260,7 +265,7 @@ setTimeout(function () {
   });
 
   //Update Change Dialog
-  updateButton.addEventListener("click", function () {
+  updateButton.addEventListener("click", function() {
     let title = document.getElementById("title1").value;
     oneRef = taskRef.child(currentTask.id);
     document.getElementById("title1").value = "";
@@ -273,7 +278,7 @@ setTimeout(function () {
     });
   });
   //Delete Button
-  delButton.addEventListener("click", function () {
+  delButton.addEventListener("click", function() {
     if (confirm("Are you sure you want to delete this Task?")) {
       console.log("Clicked");
       oneRef = taskRef.child(currentTask.id);
@@ -284,7 +289,7 @@ setTimeout(function () {
   });
   //Cancel Button
   for (var i = 0; i < cancelButtons.length; i++) {
-    cancelButtons[i].addEventListener("click", function () {
+    cancelButtons[i].addEventListener("click", function() {
       document.getElementById("title0").value = "";
       document.getElementById("title1").value = "";
       document.getElementById("handler0").value = "";
@@ -292,3 +297,34 @@ setTimeout(function () {
     });
   }
 }, 1500);
+
+async function getCurrTeam(ref){
+  return ref.once('value').then(function(snapshot){
+      currentTeam = snapshot.val();
+      console.log(currentTeam);
+  });
+}
+
+async function getAdminID(ref){
+  return ref.once('value').then(function(snapshot){
+    adminId = snapshot.val();
+    console.log(adminId);
+  })
+}
+
+async function changeView(){
+  var item = document.getElementById("move");
+  var ref = firebase.database().ref("Users/" + userId + "/currTeam");
+  await getCurrTeam(ref);
+  var aRef = firebase.database().ref("Team/" + currentTeam + "/admin");
+  await getAdminID(aRef);
+  if(adminId == userId){
+    console.log("Should not be printed");
+    item.href = "HomePage.html";
+  }
+  else{
+    item.href = "HomePageMem.html";
+    console.log("Should be printed");
+  } 
+
+}
